@@ -1,0 +1,33 @@
+name: whale-scan
+
+on:
+  schedule:
+    - cron: "41 * * * *"   # svakog sata
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: whale-scan
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-audit --no-fund
+      - name: Sken
+        run: node scan.js
+      - name: Sacuvaj podatke
+        if: always()
+        run: |
+          git config user.name "whale-tracker"
+          git config user.email "whale-tracker@users.noreply.github.com"
+          git add data/state.json docs/data.json 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "sken $(date -u +%F\ %H:%M)"
+          git pull --rebase --quiet || true
+          git push
