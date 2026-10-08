@@ -1,0 +1,16 @@
+{
+  "token": {
+    "name": "TENDIES",
+    "address": "0x45242320DBB855EeA8Fd36804C6487E10E97FCF9"
+  },
+  "minUsd": 2000,
+  "minPoolUsd": 1000,
+  "backfillDays": 30,
+  "confirmations": 20,
+  "maxBlocksPerRun": 4000000,
+  "initialChunk": 50000,
+  "maxChunk": 500000,
+  "maxProfilesPerRun": 40,
+  "maxEventsPerWallet": 300,
+  "maxWhaleBuys": 500
+}
