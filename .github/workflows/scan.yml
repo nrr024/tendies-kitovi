@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency: whale-scan
 
@@ -31,3 +32,11 @@ jobs:
           git diff --cached --quiet || git commit -m "sken $(date -u +%F\ %H:%M)"
           git pull --rebase --quiet || true
           git push
+      - name: Nastavi odmah ako istorija nije sustignuta
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if node -e "process.exit(require('./docs/data.json').caughtUp ? 1 : 0)"; then
+            gh workflow run scan.yml --ref main
+          fi
