@@ -127,7 +127,19 @@ async function profile(addr) {
 }
 
 async function main() {
-  const provider = new ethers.JsonRpcProvider(RPC);
+  const provider = new ethers.JsonRpcProvider(RPC, undefined, { staticNetwork: true, batchMaxCount: 1 });
+  // javni RPC povremeno vrati 503/429 — ponovi do 6 puta sa pauzom
+  const rawSend = provider._send.bind(provider);
+  provider._send = async (payload) => {
+    for (let i = 0; ; i++) {
+      try { return await rawSend(payload); }
+      catch (e) {
+        const msg = String(e?.shortMessage || e?.message || e);
+        if (i >= 5 || !/503|502|504|429|timeout|ECONNRESET|socket|Service Unavailable|Too Many/i.test(msg)) throw e;
+        await sleep(1500 * 2 ** i);
+      }
+    }
+  };
   const net = await provider.getNetwork();
   if (net.chainId !== CHAIN_ID) throw new Error(`Pogresna mreza: ${net.chainId}`);
 
