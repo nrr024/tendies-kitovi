@@ -7,7 +7,7 @@
   "minPoolUsd": 1000,
   "backfillDays": 30,
   "confirmations": 20,
-  "maxBlocksPerRun": 4000000,
+  "maxBlocksPerRun": 10000000,
   "initialChunk": 50000,
   "maxChunk": 500000,
   "maxProfilesPerRun": 40,
