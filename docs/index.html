@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TENDIES Kitovi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: sonar-style lista kitova — sazetak toka gore, zatim kartice walleta koje se otvaraju u profil */
+:root {
+  --bg: #eef2f1;
+  --surface: #ffffff;
+  --ink: #0d1f24;
+  --muted: #5b6e72;
+  --line: #d3dcdb;
+  --accent: #0d6e6a;
+  --accent-soft: #d6ebe8;
+  --buy: #157a3f;
+  --buy-soft: #dcefe2;
+  --sell: #b4352b;
+  --sell-soft: #f6dedb;
+  --warn: #9a6400;
+  --warn-soft: #f4e7cc;
+  --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #081315; --surface: #0f1f22; --ink: #e2eceb; --muted: #8aa1a3; --line: #1f3539;
+    --accent: #4fc2b9; --accent-soft: #123a38; --buy: #5fd08c; --buy-soft: #12301f;
+    --sell: #ff8a7d; --sell-soft: #3a1a17; --warn: #f2bd5a; --warn-soft: #3a2c10;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #081315; --surface: #0f1f22; --ink: #e2eceb; --muted: #8aa1a3; --line: #1f3539;
+  --accent: #4fc2b9; --accent-soft: #123a38; --buy: #5fd08c; --buy-soft: #12301f;
+  --sell: #ff8a7d; --sell-soft: #3a1a17; --warn: #f2bd5a; --warn-soft: #3a2c10;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 880px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 20px; }
+a { color: var(--accent); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+header { display: grid; gap: 6px; }
+.eyebrow { font: 500 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 800 clamp(28px, 7vw, 40px)/1.05 var(--display); margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); font-size: 13px; }
+.status { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--buy); }
+.dot.lag { background: var(--warn); }
+
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; min-width: 0; }
+.stat h2 { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.stat .big { font: 600 22px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.flowbar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--line); }
+.flowbar .b { background: var(--buy); } .flowbar .s { background: var(--sell); }
+.flowlegend { display: flex; justify-content: space-between; font: 12px var(--mono); color: var(--muted); }
+
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+.tab { background: none; border: 0; padding: 10px 12px; cursor: pointer; color: var(--muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.chipbtn { border: 1px solid var(--line); background: var(--surface); padding: 5px 10px; border-radius: 999px; cursor: pointer; font-size: 13px; }
+.chipbtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.sort { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.sort select { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+
+.list { display: grid; gap: 8px; }
+.list-wrap { display: grid; gap: 12px; }
+[hidden] { display: none !important; }
+.whale { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.whale > button { all: unset; box-sizing: border-box; width: 100%; cursor: pointer; padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; }
+.whale > button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.addr { font: 500 14px var(--mono); display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.star { color: var(--warn); }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag { font: 500 11px/1 var(--mono); padding: 4px 7px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.tag.flipper, .tag.izlazi { background: var(--sell-soft); color: var(--sell); }
+.tag.akumulira, .tag.drzi { background: var(--buy-soft); color: var(--buy); }
+.tag.svez, .tag.bot, .tag.ugovor { background: var(--warn-soft); color: var(--warn); }
+.right { text-align: right; display: grid; gap: 2px; align-content: start; }
+.right .v { font: 600 16px var(--mono); font-variant-numeric: tabular-nums; }
+.pct.up { color: var(--buy); } .pct.down { color: var(--sell); }
+.sub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 14px; font: 12px var(--mono); color: var(--muted); }
+
+.detail { border-top: 1px solid var(--line); padding: 14px; display: grid; gap: 16px; }
+.detail h3 { font: 600 13px/1 var(--body); margin: 0 0 8px; }
+.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.kv div { display: grid; gap: 2px; min-width: 0; }
+.kv dt { font-size: 12px; color: var(--muted); }
+.kv dd { margin: 0; font: 500 14px var(--mono); overflow-wrap: anywhere; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+td.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.ev-kupovina { color: var(--buy); } .ev-prodaja { color: var(--sell); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { border: 1px solid var(--line); background: var(--bg); padding: 7px 12px; border-radius: 8px; cursor: pointer; text-decoration: none; color: var(--ink); font-size: 13px; }
+
+.feed { display: grid; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.feed .row { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); align-items: baseline; }
+.feed .row:last-child { border-bottom: 0; }
+.feed .when { font: 12px var(--mono); color: var(--muted); min-width: 64px; }
+.feed .who { font: 13px var(--mono); min-width: 0; overflow-wrap: anywhere; }
+.feed .amt { font: 600 14px var(--mono); color: var(--buy); text-align: right; }
+
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 24px; color: var(--muted); display: grid; gap: 6px; }
+.empty strong { color: var(--ink); }
+footer { font-size: 12px; color: var(--muted); display: grid; gap: 4px; }
+@media (max-width: 480px) { .sort { margin-left: 0; width: 100%; } }
+@media (prefers-reduced-motion: no-preference) { .whale { transition: border-color .15s; } .whale:hover { border-color: var(--accent); } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <span class="eyebrow">Robinhood Chain · kupovine od $2.000 naviše</span>
+    <h1 id="title">TENDIES kitovi</h1>
+    <div class="meta">
+      <span class="num" id="price">—</span>
+      <span class="status"><span class="dot" id="dot"></span><span id="updated">Učitavam…</span></span>
+    </div>
+  </header>
+
+  <section class="summary" id="summary" aria-label="Sažetak"></section>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-kitovi" aria-selected="true">Kitovi</button>
+    <button class="tab" role="tab" id="tab-kupovine" aria-selected="false">Velike kupovine</button>
+  </nav>
+
+  <section id="view-kitovi" class="list-wrap">
+    <div class="filters" id="filters"></div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <section id="view-kupovine" hidden>
+    <div class="feed" id="feed"></div>
+  </section>
+
+  <footer>
+    <span>Podaci se osvežavaju svakog sata direktno sa lanca. Oznake su heuristika iz ponašanja walleta, a ne dokaz ko stoji iza njega.</span>
+    <span>Iznosi u $ za ETH parove računaju se po ceni ETH-a u trenutku skeniranja, pa su za starije kupovine procena.</span>
+  </footer>
+</main>
+
+<script>
+const LABELS = {
+  "drzi": ["drži", "drzi"], "akumulira": ["akumulira", "akumulira"], "flipper": ["flipper", "flipper"],
+  "izlazi": ["izlazi", "izlazi"], "svez wallet": ["svež wallet", "svez"], "bot?": ["bot?", "bot"],
+  "ugovor": ["ugovor", "ugovor"], "povezan": ["povezan", "povezan"],
+};
+const state = { data: null, filter: "sve", sort: "vrednost", open: new Set(), stars: new Set() };
+try { state.stars = new Set(JSON.parse(localStorage.getItem("kitovi-zvezdice") || "[]")); } catch {}
+const saveStars = () => { try { localStorage.setItem("kitovi-zvezdice", JSON.stringify([...state.stars])); } catch {} };
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const short = (a) => a.slice(0, 6) + "…" + a.slice(-4);
+const usd = (n) => n == null ? "—" : "$" + (Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(2) + "M" : Math.abs(n) >= 1e4 ? (n / 1e3).toFixed(1) + "k" : n.toLocaleString("sr-RS", { maximumFractionDigits: 0 }));
+const tok = (n) => n == null ? "—" : Math.abs(n) >= 1e6 ? (n / 1e6).toFixed(2) + "M" : Math.abs(n) >= 1e3 ? (n / 1e3).toFixed(1) + "k" : n.toFixed(0);
+const px = (n) => n == null ? "—" : "$" + (n < 0.01 ? n.toPrecision(3) : n.toFixed(4));
+const ago = (ts) => {
+  const s = Math.floor(Date.now() / 1000) - ts;
+  if (s < 3600) return Math.max(1, Math.floor(s / 60)) + " min";
+  if (s < 86400) return Math.floor(s / 3600) + " h";
+  return Math.floor(s / 86400) + " d";
+};
+const date = (ts) => new Date(ts * 1000).toLocaleString("sr-RS", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+function renderHeader(d) {
+  $("title").textContent = `${d.token.name} kitovi`;
+  $("price").textContent = `${d.token.name} ${px(d.token.priceUsd)} · ETH $${d.token.ethUsd.toFixed(0)}`;
+  $("updated").textContent = d.caughtUp ? `ažurirano pre ${ago(d.updated)}` : `sustiže istoriju · ažurirano pre ${ago(d.updated)}`;
+  $("dot").classList.toggle("lag", !d.caughtUp || Date.now() / 1000 - d.updated > 3 * 3600);
+}
+
+function flowCard(label, f) {
+  const total = f.buy + f.sell;
+  const net = f.buy - f.sell;
+  const b = total ? (f.buy / total) * 100 : 50;
+  return `<div class="stat"><h2>${label}</h2>
+    <div class="big ${net >= 0 ? "pct up" : "pct down"}">${net >= 0 ? "+" : "−"}${usd(Math.abs(net))}</div>
+    <div class="flowbar" role="img" aria-label="kupili ${usd(f.buy)}, prodali ${usd(f.sell)}"><span class="b" style="width:${b}%"></span><span class="s" style="width:${100 - b}%"></span></div>
+    <div class="flowlegend"><span>kupili ${usd(f.buy)}</span><span>prodali ${usd(f.sell)}</span></div></div>`;
+}
+
+function renderSummary(d) {
+  const holding = d.wallets.reduce((s, w) => s + (w.valueUsd || 0), 0);
+  const stillIn = d.wallets.filter((w) => w.balance > 0).length;
+  $("summary").innerHTML =
+    flowCard("Neto tok kitova · 24h", d.flows.d1) +
+    flowCard("Neto tok kitova · 7 dana", d.flows.d7) +
+    `<div class="stat"><h2>Praćeni kitovi</h2><div class="big">${d.wallets.length}</div>
+      <div class="flowlegend"><span>${stillIn} još drži</span><span>${d.wallets.length - stillIn} izašlo</span></div></div>` +
+    `<div class="stat"><h2>Kitovi drže ukupno</h2><div class="big">${usd(holding)}</div>
+      <div class="flowlegend"><span>po trenutnoj ceni</span></div></div>`;
+}
+
+function renderFilters(d) {
+  const counts = {};
+  d.wallets.forEach((w) => w.labels.forEach((l) => (counts[l] = (counts[l] || 0) + 1)));
+  const opts = [["sve", `sve ${d.wallets.length}`], ["zvezdica", `★ moji ${d.wallets.filter((w) => state.stars.has(w.address)).length}`]]
+    .concat(Object.keys(LABELS).filter((k) => counts[k]).map((k) => [k, `${LABELS[k][0]} ${counts[k]}`]));
+  $("filters").innerHTML = opts.map(([k, t]) => `<button class="chipbtn" data-f="${esc(k)}" aria-pressed="${state.filter === k}">${esc(t)}</button>`).join("") +
+    `<label class="sort" for="sortsel">Poređaj <select id="sortsel">
+      ${[["vrednost", "vrednost pozicije"], ["kupio", "koliko je kupio"], ["aktivnost", "poslednja aktivnost"], ["prinos", "prinos od ulaza"]]
+        .map(([v, t]) => `<option value="${v}" ${state.sort === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>`;
+}
+
+function whaleCard(w, d) {
+  const open = state.open.has(w.address);
+  const pct = w.vsEntryPct;
+  const tags = w.labels.map((l) => `<span class="tag ${(LABELS[l] || [l, ""])[1]}">${esc((LABELS[l] || [l])[0])}</span>`).join("");
+  let html = `<article class="whale" data-a="${w.address}">
+    <button aria-expanded="${open}">
+      <div style="display:grid;gap:6px;min-width:0">
+        <span class="addr">${state.stars.has(w.address) ? '<span class="star" aria-label="moj">★</span>' : ""}${short(w.address)}</span>
+        <span class="tags">${tags}</span>
+      </div>
+      <div class="right"><span class="v">${usd(w.valueUsd)}</span>
+        <span class="num pct ${pct == null ? "" : pct >= 0 ? "up" : "down"}">${pct == null ? "ulaz nepoznat" : (pct >= 0 ? "+" : "") + pct.toFixed(0) + "% od ulaza"}</span></div>
+      <div class="sub"><span>kupio ${usd(w.boughtUsd)}</span><span>prodao ${usd(w.soldUsd)}</span><span>drži ${tok(w.balance)}</span><span>aktivan pre ${ago(w.lastTs)}</span></div>
+    </button>`;
+  if (open) html += detail(w, d);
+  return html + "</article>";
+}
+
+function detail(w, d) {
+  const p = w.profile || {};
+  const acquired = w.boughtTok + w.recvTok;
+  const outPct = acquired ? ((w.soldTok + w.sentTok) / acquired) * 100 : 0;
+  const holdings = (p.holdings || []).filter((h) => h.address !== d.token.address);
+  const ev = w.events.map((e) => `<tr><td>${date(e.ts)}</td><td class="ev-${e.type}">${e.type}</td>
+      <td class="n">${tok(e.tokens)}</td><td class="n">${e.usd == null ? "—" : usd(e.usd)}</td>
+      <td><a href="${d.explorer}/tx/${e.tx}" target="_blank" rel="noopener">tx</a>${
+        d.wallets.some((x) => x.address === e.counterparty) ? ` · <span class="tag povezan">${short(e.counterparty)}</span>` : ""}</td></tr>`).join("");
+  return `<div class="detail">
+    <dl class="kv">
+      <div><dt>Prvi put viđen</dt><dd>${date(w.firstSeen)}</dd></div>
+      <div><dt>Prosečan ulaz</dt><dd>${px(w.avgEntry)}</dd></div>
+      <div><dt>Kupovine / prodaje</dt><dd>${w.buyCount} / ${w.sellCount}</dd></div>
+      <div><dt>Izašao</dt><dd>${outPct.toFixed(0)}% pozicije</dd></div>
+      <div><dt>Transakcija ukupno</dt><dd>${p.txCount ?? "—"}</dd></div>
+      <div><dt>ETH na walletu</dt><dd>${p.ethBalance == null ? "—" : p.ethBalance.toFixed(3)}</dd></div>
+    </dl>
+    ${holdings.length ? `<div><h3>Šta još drži</h3><div class="tags">${holdings.map((h) =>
+      `<span class="tag">${esc(h.symbol)} ${h.usd != null ? usd(h.usd) : tok(h.amount)}</span>`).join("")}</div></div>` : ""}
+    ${w.links.length ? `<div><h3>Povezan sa kitovima</h3><div class="tags">${w.links.map((l) => `<span class="tag povezan">${short(l)}</span>`).join("")}</div></div>` : ""}
+    <div><h3>TENDIES istorija</h3><div class="scroll"><table>
+      <thead><tr><th>Kada</th><th>Šta</th><th class="n">Tokena</th><th class="n">$</th><th></th></tr></thead>
+      <tbody>${ev || '<tr><td colspan="5">Nema zabeleženih kretanja.</td></tr>'}</tbody></table></div></div>
+    <div class="actions">
+      <button class="btn" data-star="${w.address}">${state.stars.has(w.address) ? "★ Skini iz mojih" : "☆ Dodaj u moje"}</button>
+      <button class="btn" data-copy="${w.address}">Kopiraj adresu</button>
+      <a class="btn" href="${d.explorer}/address/${w.address}" target="_blank" rel="noopener">Otvori na Blockscout-u</a>
+    </div>
+  </div>`;
+}
+
+function renderList(d) {
+  let ws = [...d.wallets];
+  if (state.filter === "zvezdica") ws = ws.filter((w) => state.stars.has(w.address));
+  else if (state.filter !== "sve") ws = ws.filter((w) => w.labels.includes(state.filter));
+  const key = { vrednost: (w) => w.valueUsd || 0, kupio: (w) => w.boughtUsd || 0, aktivnost: (w) => w.lastTs, prinos: (w) => w.vsEntryPct ?? -1e9 }[state.sort];
+  ws.sort((a, b) => key(b) - key(a));
+  $("list").innerHTML = ws.length ? ws.map((w) => whaleCard(w, d)).join("")
+    : `<div class="empty"><strong>Nema kitova u ovom filteru.</strong><span>Promeni filter ili sačekaj sledeći sken.</span></div>`;
+}
+
+function renderFeed(d) {
+  $("feed").innerHTML = d.whaleBuys.length ? d.whaleBuys.map((b) => `<div class="row">
+      <span class="when">${ago(b.ts)}</span>
+      <span class="who">${short(b.wallet)} · ${tok(b.tokens)} ${esc(d.token.name)} · <a href="${d.explorer}/tx/${b.tx}" target="_blank" rel="noopener">tx</a></span>
+      <span class="amt">${usd(b.usd)}</span></div>`).join("")
+    : `<div class="empty" style="border:0"><strong>Još nema kupovina od ${usd(d.minUsd)} naviše.</strong><span>Čim se pojavi prva, biće ovde.</span></div>`;
+}
+
+function render() {
+  const d = state.data;
+  renderHeader(d); renderSummary(d); renderFilters(d); renderList(d); renderFeed(d);
+}
+
+document.addEventListener("click", async (e) => {
+  const t = e.target.closest("button, [data-f]");
+  if (!t || !state.data) return;
+  if (t.dataset.f) { state.filter = t.dataset.f; renderFilters(state.data); renderList(state.data); return; }
+  if (t.dataset.star) {
+    const a = t.dataset.star; state.stars.has(a) ? state.stars.delete(a) : state.stars.add(a); saveStars();
+    renderFilters(state.data); renderList(state.data); return;
+  }
+  if (t.dataset.copy) {
+    try { await navigator.clipboard.writeText(t.dataset.copy); t.textContent = "Kopirano"; } catch { t.textContent = t.dataset.copy; }
+    return;
+  }
+  if (t.classList.contains("tab")) {
+    const k = t.id === "tab-kitovi";
+    $("tab-kitovi").setAttribute("aria-selected", k); $("tab-kupovine").setAttribute("aria-selected", !k);
+    $("view-kitovi").hidden = !k; $("view-kupovine").hidden = k; return;
+  }
+  const card = t.closest(".whale");
+  if (card && t.parentElement === card) {
+    const a = card.dataset.a; state.open.has(a) ? state.open.delete(a) : state.open.add(a); renderList(state.data);
+  }
+});
+document.addEventListener("change", (e) => {
+  if (e.target.id === "sortsel") { state.sort = e.target.value; renderList(state.data); }
+});
+
+fetch("data.json?t=" + Date.now())
+  .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then((d) => { state.data = d; render(); })
+  .catch(() => {
+    $("updated").textContent = "još nema podataka";
+    $("dot").classList.add("lag");
+    $("list").innerHTML = `<div class="empty"><strong>Prvi sken još nije završen.</strong>
+      <span>Skener radi svakog sata. Prvi put prelazi 30 dana istorije u 2–3 runa, pa se ovde pojavljuju kitovi sa kupovinama od $2.000 naviše.</span></div>`;
+  });
+</script>
+</body>
+</html>
